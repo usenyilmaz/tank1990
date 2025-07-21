@@ -1,7 +1,6 @@
 package tank1990.ui;
 
 import javax.swing.*;
-import java.awt.*;
 
 public class GameWindow extends JFrame {
     private StartPanel startPanel;
@@ -25,4 +24,4 @@ public class GameWindow extends JFrame {
         revalidate();
         repaint();
     }
-} 
+}
