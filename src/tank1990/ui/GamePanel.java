@@ -8,20 +8,37 @@ import tank1990.entity.Player;
 public class GamePanel extends JPanel implements Runnable {
     Player player;
     KeyHandler keyH;
+    Thread gameThread;
 
     public GamePanel() {
-        this.setFocusable(true);
         keyH = new KeyHandler();
+        this.setFocusable(true);
+        this.requestFocusInWindow();
         this.addKeyListener(keyH);
-        player = new Player(100, 100); // Starting position
-        // Start game loop thread here...
+        this.setBackground(Color.BLACK);
+        player = new Player(100, 100);
+        startGameThread();
+    }
+
+    public void startGameThread() {
+        gameThread = new Thread(this);
+        gameThread.start();
+    }
+
+    @Override
+    public void run() {
+        while (true) {
+            update();
+            repaint();
+            try { Thread.sleep(16); } catch (InterruptedException e) {}
+        }
     }
 
     public void update() {
-        if (keyH.upPressed)    { player.direction = "UP";    player.move(); }
-        if (keyH.downPressed)  { player.direction = "DOWN";  player.move(); }
-        if (keyH.leftPressed)  { player.direction = "LEFT";  player.move(); }
-        if (keyH.rightPressed) { player.direction = "RIGHT"; player.move(); }
+        if (keyH.wPressed) { player.direction = "UP"; player.move(); }
+        if (keyH.sPressed) { player.direction = "DOWN"; player.move(); }
+        if (keyH.aPressed) { player.direction = "LEFT"; player.move(); }
+        if (keyH.dPressed) { player.direction = "RIGHT"; player.move(); }
     }
 
     @Override
@@ -33,7 +50,8 @@ public class GamePanel extends JPanel implements Runnable {
     }
 
     @Override
-    public void run() {
-        throw new UnsupportedOperationException("Not supported yet.");
+    public void addNotify() {
+        super.addNotify();
+        requestFocusInWindow();
     }
 }
