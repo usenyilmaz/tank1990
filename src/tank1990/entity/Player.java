@@ -51,7 +51,7 @@ public class Player {
             case "RIGHT": newX += speed; break;
         }
         // Clamp to boundaries
-        if (newX >= 0 && newX <= panelWidth - 32 && newY >= 0 && newY <= panelHeight - 32) {
+        if (newX >= 0 && newX <= panelWidth - 48 && newY >= 0 && newY <= panelHeight - 48) {
             x = newX;
             y = newY;
         }
@@ -63,13 +63,13 @@ public class Player {
             return null; // Too soon to shoot again
         }
         lastShotTime = now;
-        int bulletX = x + 12; // Center bullet horizontally in 32x32 tank
-        int bulletY = y + 12; // Center bullet vertically in 32x32 tank
+        int bulletX = x + 20; // Center bullet horizontally in 48x48 tank
+        int bulletY = y + 20; // Center bullet vertically in 48x48 tank
         switch (direction) {
-            case "UP":    bulletX = x + 12; bulletY = y; break;
-            case "DOWN":  bulletX = x + 12; bulletY = y + 32 - 8; break;
-            case "LEFT":  bulletX = x;      bulletY = y + 12; break;
-            case "RIGHT": bulletX = x + 32 - 8; bulletY = y + 12; break;
+            case "UP":    bulletX = x + 20; bulletY = y; break;
+            case "DOWN":  bulletX = x + 20; bulletY = y + 48 - 8; break;
+            case "LEFT":  bulletX = x;      bulletY = y + 20; break;
+            case "RIGHT": bulletX = x + 48 - 8; bulletY = y + 20; break;
         }
         return new Bullet(bulletX, bulletY, direction);
     }
@@ -77,11 +77,11 @@ public class Player {
     public void draw(Graphics2D g) {
         BufferedImage image = directionToImage.get(direction);
         if (image != null) {
-            g.drawImage(image, x, y, 32, 32, null);
+            g.drawImage(image, x, y, 48, 48, null);
         } else {
             // Fallback: If image is null, draw green square
             g.setColor(Color.GREEN);
-            g.fillRect(x, y, 32, 32);
+            g.fillRect(x, y, 48, 48);
         }
     }
 }

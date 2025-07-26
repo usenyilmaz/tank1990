@@ -53,9 +53,9 @@ public class GamePanel extends JPanel implements Runnable {
         int panelHeight = getHeight();
         // Yön tuşları
         if (keyH.upPressed)    { player.direction = "UP"; player.move(panelWidth, panelHeight); }
-        if (keyH.downPressed)  { player.direction = "DOWN"; player.move(panelWidth, panelHeight); }
-        if (keyH.leftPressed)  { player.direction = "LEFT"; player.move(panelWidth, panelHeight); }
-        if (keyH.rightPressed) { player.direction = "RIGHT"; player.move(panelWidth, panelHeight); }
+        else if (keyH.downPressed)  { player.direction = "DOWN"; player.move(panelWidth, panelHeight); }
+        else if (keyH.leftPressed)  { player.direction = "LEFT"; player.move(panelWidth, panelHeight); }
+        else if (keyH.rightPressed) { player.direction = "RIGHT"; player.move(panelWidth, panelHeight); }
         // Shoot with Z
         if (keyH.zPressed) {
             Bullet b = player.shoot();
