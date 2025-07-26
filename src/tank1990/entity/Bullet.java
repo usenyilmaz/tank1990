@@ -3,7 +3,7 @@ package tank1990.entity;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 
-public class Bullet {
+public class Bullet implements Entity {
     public int x, y;
     public String direction;
     public int speed = 12;
@@ -14,6 +14,25 @@ public class Bullet {
         this.x = x;
         this.y = y;
         this.direction = direction;
+    }
+
+    // Entity interface methods
+    @Override
+    public int getX() { return x; }
+    
+    @Override
+    public int getY() { return y; }
+    
+    @Override
+    public int getWidth() { return 8; }
+    
+    @Override
+    public int getHeight() { return 8; }
+    
+    @Override
+    public void setPosition(int x, int y) {
+        this.x = x;
+        this.y = y;
     }
 
     public void move() {

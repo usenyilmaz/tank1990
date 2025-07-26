@@ -7,7 +7,7 @@ import java.util.HashMap;
 import java.util.Map;
 import javax.imageio.ImageIO;
 
-public class Player {
+public class Player implements Entity {
     public int x, y;         // Position
     public int speed = 4;    // Movement speed
     public String direction = "UP"; // "UP", "DOWN", "LEFT", "RIGHT"
@@ -20,6 +20,25 @@ public class Player {
         this.x = startX;
         this.y = startY;
         loadImages();
+    }
+
+    // Entity interface methods
+    @Override
+    public int getX() { return x; }
+    
+    @Override
+    public int getY() { return y; }
+    
+    @Override
+    public int getWidth() { return 48; }
+    
+    @Override
+    public int getHeight() { return 48; }
+    
+    @Override
+    public void setPosition(int x, int y) {
+        this.x = x;
+        this.y = y;
     }
 
     private void loadImages() {
