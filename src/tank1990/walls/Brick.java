@@ -17,11 +17,16 @@ public class Brick extends AbstractWall implements Obstacle{
             if (imgURL != null) {
                 setImage(ImageIO.read(imgURL));
             } else {
-                System.err.println("Could not find brick.jpg");
+                System.err.println("Could not find brick.png");
             }
         } catch (IOException e) {
-            System.err.println("Could not load brick.jpg: " + e.getMessage());
+            System.err.println("Could not load brick.png: " + e.getMessage());
         }
+    }
+
+    @Override
+    public void breakObstacle() {
+        destroyed = true;
     }
 
     @Override
@@ -41,6 +46,6 @@ public class Brick extends AbstractWall implements Obstacle{
 
     @Override
     public void hit() {
-        destroy();
+        breakObstacle();
     }
 }

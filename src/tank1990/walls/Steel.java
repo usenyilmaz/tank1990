@@ -17,11 +17,17 @@ public class Steel extends AbstractWall implements Obstacle{
             if (imgURL != null) {
                 setImage(ImageIO.read(imgURL));
             } else {
-                System.err.println("Could not find steel.jpg");
+                System.err.println("Could not find steel.png");
             }
         } catch (IOException e) {
-            System.err.println("Could not load steel.jpg: " + e.getMessage());
+            System.err.println("Could not load steel.png: " + e.getMessage());
         }
+    }
+
+    @Override
+    public void breakObstacle() {
+        // Steel is harder to break - maybe require multiple hits
+        destroyed = true;
     }
 
     @Override
@@ -36,11 +42,11 @@ public class Steel extends AbstractWall implements Obstacle{
 
     @Override
     public boolean isDestructible() {
-        return false;
+        return true;
     }
 
     @Override
     public void hit() {
-        // Steel is not destroyed by default
+        breakObstacle();
     }
 }

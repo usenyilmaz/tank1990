@@ -1,7 +1,7 @@
 package tank1990.ui;
 
-import java.util.List;
 import java.util.ArrayList;
+import java.util.List;
 import tank1990.walls.AbstractWall;
 import tank1990.walls.Brick;
 import tank1990.walls.Steel;
@@ -21,6 +21,7 @@ public class StageGenerator {
             walls.add(new Brick(200, 100));
             walls.add(new Steel(200, 100));
             walls.add(new Brick(300, 200));
+            
             // ...add more as needed
         }
         // You can add more stages with else if (stageNumber == 2) { ... }

@@ -23,7 +23,7 @@ public abstract class AbstractWall {
     public void setImage(BufferedImage newimage){
         this.image = newimage;
     }
-    
+
     public void Explode() {
         try {
             java.net.URL imgURL = getClass().getResource("explosion.png");
@@ -37,8 +37,11 @@ public abstract class AbstractWall {
         explosionStartTime = System.currentTimeMillis();
     }
 
-    public boolean StumbleEntity(Entity e) {
-        return this.collidesWith(e.getX(), e.getY(), e.getWidth(), e.getHeight());
+    public void StumbleEntity(Entity e) {
+        if (this.collidesWith(e.getX(), e.getY(), e.getWidth(), e.getHeight())) {
+            // Handle collision - this can be overridden by subclasses
+            System.out.println("Entity stumbled on wall at (" + x + ", " + y + ")");
+        }
     }
     
     // Public collision check for bullets/entities
@@ -99,4 +102,5 @@ public abstract class AbstractWall {
 
     public abstract boolean isDestructible();
     public abstract void hit();
+    public abstract void breakObstacle();
 }

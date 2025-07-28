@@ -17,13 +17,18 @@ public class Ice extends AbstractWall implements Obstacle {
             if (imgURL != null) {
                 setImage(ImageIO.read(imgURL));
             } else {
-                System.err.println("Could not find ice.jpg");
+                System.err.println("Could not find ice.png");
             }
         } catch (IOException e) {
-            System.err.println("Could not load ice.jpg: " + e.getMessage());
+            System.err.println("Could not load ice.png: " + e.getMessage());
         }
     }
 
+    @Override
+    public void breakObstacle() {
+        // Ice might be easier to break
+        destroyed = true;
+    }
 
     @Override
     public void Explode() {
@@ -33,5 +38,15 @@ public class Ice extends AbstractWall implements Obstacle {
     @Override
     public void StumbleEntity(Entity e) {
         super.StumbleEntity(e);
+    }
+
+    @Override
+    public boolean isDestructible() {
+        return true;
+    }
+
+    @Override
+    public void hit() {
+        breakObstacle();
     }
 }

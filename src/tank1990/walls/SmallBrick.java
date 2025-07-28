@@ -2,14 +2,31 @@ package tank1990.walls;
 
 import tank1990.entity.Entity;
 
-public class SmallBrick extends AbstractWall implements Obstacle{
+public class SmallBrick extends AbstractWall implements Obstacle {
 
-
-    
     public SmallBrick(int x, int y) {
         super(x, y);
         width = 24;
         height = 24;
+        loadSmallBrickImage();
+    }
+
+    private void loadSmallBrickImage() {
+        try {
+            java.net.URL imgURL = getClass().getResource("small_brick.jpg");
+            if (imgURL != null) {
+                setImage(javax.imageio.ImageIO.read(imgURL));
+            } else {
+                System.err.println("Could not find small_brick.jpg");
+            }
+        } catch (Exception e) {
+            System.err.println("Could not load small_brick.jpg: " + e.getMessage());
+        }
+    }
+
+    @Override
+    public void breakObstacle() {
+        destroyed = true;
     }
 
     @Override
@@ -24,14 +41,11 @@ public class SmallBrick extends AbstractWall implements Obstacle{
 
     @Override
     public boolean isDestructible() {
-        throw new UnsupportedOperationException("Not supported yet.");
+        return true;
     }
 
     @Override
     public void hit() {
-        throw new UnsupportedOperationException("Not supported yet.");
+        breakObstacle();
     }
-
-
-    
 }

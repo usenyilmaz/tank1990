@@ -95,7 +95,7 @@ public class GamePanel extends JPanel implements Runnable {
                 }
             }
         }
-        player.move(panelWidth, panelHeight);
+        // Player-wall collision
         for (AbstractWall wall : walls) {
             if (!wall.isDestroyed() && wall.collidesWith(player.getX(), player.getY(), player.getWidth(), player.getHeight())) {
                 // Use public getter methods instead of direct field access
