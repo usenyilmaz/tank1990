@@ -13,17 +13,22 @@ public class SmallBrick extends AbstractWall implements Obstacle{
     }
 
     @Override
-    public void breakObstacle() {
-        destroyed = true;
-    }
-
-    @Override
     public void Explode() {
-        throw new UnsupportedOperationException("Not supported yet.");
+        super.Explode();
     }
 
     @Override
     public void StumbleEntity(Entity e) {
+        super.StumbleEntity(e);
+    }
+
+    @Override
+    public boolean isDestructible() {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    @Override
+    public void hit() {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 

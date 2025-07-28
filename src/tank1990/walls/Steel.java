@@ -13,7 +13,7 @@ public class Steel extends AbstractWall implements Obstacle{
 
     private void loadSteelImage() {
         try {
-            java.net.URL imgURL = getClass().getResource("steel.jpg");
+            java.net.URL imgURL = getClass().getResource("steel.png");
             if (imgURL != null) {
                 setImage(ImageIO.read(imgURL));
             } else {
@@ -24,20 +24,23 @@ public class Steel extends AbstractWall implements Obstacle{
         }
     }
 
-
     @Override
     public void Explode() {
-        // Steel might be harder to explode
-        destroyed = true;
+        super.Explode();
     }
 
     @Override
     public void StumbleEntity(Entity e) {
-        if (!destroyed && checkCollision(e)) {
-            System.out.println("Entity stumbled on steel at (" + x + ", " + y + ")");
-        }
+        super.StumbleEntity(e);
     }
 
+    @Override
+    public boolean isDestructible() {
+        return false;
+    }
 
-
+    @Override
+    public void hit() {
+        // Steel is not destroyed by default
+    }
 }

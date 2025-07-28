@@ -1,8 +1,7 @@
 package tank1990.walls;
 
-import java.awt.image.BufferedImage;
-import javax.imageio.ImageIO;
 import java.io.IOException;
+import javax.imageio.ImageIO;
 import tank1990.entity.Entity;
 
 public class Ice extends AbstractWall implements Obstacle {
@@ -14,7 +13,7 @@ public class Ice extends AbstractWall implements Obstacle {
 
     private void loadIceImage() {
         try {
-            java.net.URL imgURL = getClass().getResource("ice.jpg");
+            java.net.URL imgURL = getClass().getResource("ice.png");
             if (imgURL != null) {
                 setImage(ImageIO.read(imgURL));
             } else {
@@ -28,14 +27,11 @@ public class Ice extends AbstractWall implements Obstacle {
 
     @Override
     public void Explode() {
-        // Ice might be easier to explode
-        destroyed = true;
+        super.Explode();
     }
 
     @Override
     public void StumbleEntity(Entity e) {
-        if (!destroyed && checkCollision(e)) {
-            System.out.println("Entity stumbled on ice at (" + x + ", " + y + ")");
-        }
+        super.StumbleEntity(e);
     }
 }

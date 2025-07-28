@@ -1,0 +1,103 @@
+package tank1990.entity;
+
+import java.awt.*;
+import java.awt.image.BufferedImage;
+import java.util.HashMap;
+import java.util.Map;
+
+public abstract class AbstractTank implements Entity {
+    protected int x, y;
+    protected int speed = 4;
+    public String direction = "UP"; // "UP", "DOWN", "LEFT", "RIGHT"
+    protected Map<String, BufferedImage> directionToImage = new HashMap<>();
+    protected long lastShotTime = 0;
+    protected long fireRate = 300; // milliseconds
+    protected int prevX, prevY;
+
+    public AbstractTank(int startX, int startY) {
+        this.x = startX;
+        this.y = startY;
+        this.prevX = startX;
+        this.prevY = startY;
+    }
+
+    public void move(int panelWidth, int panelHeight) {
+        int newX = x, newY = y;
+        switch (direction) {
+            case "UP":    newY -= speed; break;
+            case "DOWN":  newY += speed; break;
+            case "LEFT":  newX -= speed; break;
+            case "RIGHT": newX += speed; break;
+        }
+        // Clamp to boundaries (default 48x48 tank)
+        if (newX >= 0 && newX <= panelWidth - getWidth() && newY >= 0 && newY <= panelHeight - getHeight()) {
+            if (newX != x || newY != y) {
+                prevX = x;
+                prevY = y;
+                x = newX;
+                y = newY;
+            }
+        }
+    }
+
+    public Bullet shoot() {
+        long now = System.currentTimeMillis();
+        if (now - lastShotTime < fireRate) {
+            return null; // Too soon to shoot again
+        }
+        lastShotTime = now;
+        int bulletX = x + getWidth() / 2 - 4;
+        int bulletY = y + getHeight() / 2 - 4;
+        switch (direction) {
+            case "UP":    bulletX = x + getWidth() / 2 - 4; bulletY = y; break;
+            case "DOWN":  bulletX = x + getWidth() / 2 - 4; bulletY = y + getHeight() - 8; break;
+            case "LEFT":  bulletX = x;      bulletY = y + getHeight() / 2 - 4; break;
+            case "RIGHT": bulletX = x + getWidth() - 8; bulletY = y + getHeight() / 2 - 4; break;
+        }
+        return new Bullet(bulletX, bulletY, direction);
+    }
+
+    public void draw(Graphics2D g) {
+        BufferedImage image = directionToImage.get(direction);
+        if (image != null) {
+            g.drawImage(image, x, y, getWidth(), getHeight(), null);
+        } else {
+            // Fallback: If image is null, draw green square
+            g.setColor(Color.GREEN);
+            g.fillRect(x, y, getWidth(), getHeight());
+        }
+    }
+
+    // Entity interface methods
+    @Override
+    public int getX() { return x; }
+    @Override
+    public int getY() { return y; }
+    @Override
+    public int getWidth() { return 48; }
+    @Override
+    public int getHeight() { return 48; }
+    @Override
+    public void setPosition(int x, int y) {
+        this.x = x;
+        this.y = y;
+    }
+
+    // For future: distinguish between player and enemy tanks
+    public abstract String getTankType();
+
+    public int getPrevX(){
+        return prevX;
+    }
+
+    public int getPrevY(){
+        return prevY;
+    }
+
+    public void setprevX(int newprevX){
+        prevX = newprevX;
+    }
+    public void setprevY(int newprevY){
+        prevY = newprevY;
+    }
+}

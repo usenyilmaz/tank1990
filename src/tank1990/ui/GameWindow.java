@@ -19,7 +19,7 @@ public class GameWindow extends JFrame {
     }
 
     public void startGame() {
-        gamePanel = new GamePanel();
+        gamePanel = new GamePanel(1); // Start with stage 1
         setContentPane(gamePanel);
         revalidate();
         repaint();

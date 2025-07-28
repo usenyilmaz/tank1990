@@ -7,21 +7,27 @@ import javax.swing.*;
 import tank1990.entity.Bullet;
 import tank1990.entity.KeyHandler;
 import tank1990.entity.Player;
+import tank1990.walls.AbstractWall;
 
 public class GamePanel extends JPanel implements Runnable {
     Player player;
     KeyHandler keyH;
     Thread gameThread;
     List<Bullet> bullets = new ArrayList<>();
+    List<AbstractWall> walls = new ArrayList<>();
     private int fps = 0;
+    private int currentStageNumber;
 
-    public GamePanel() {
+    public GamePanel(int currentStageNumber) {
+        this.currentStageNumber = currentStageNumber;
         keyH = new KeyHandler();
         this.setFocusable(true);
         this.requestFocusInWindow();
         this.addKeyListener(keyH);
         this.setBackground(Color.BLACK);
         player = new Player(100, 100);
+        StageGenerator generator = new StageGenerator();
+        walls = generator.generateStage(currentStageNumber);
         startGameThread();
     }
 
@@ -64,6 +70,10 @@ public class GamePanel extends JPanel implements Runnable {
             }
             keyH.zPressed = false;
         }
+        // Update walls
+        for (AbstractWall wall : walls) {
+            wall.update();
+        }
         // Update bullets
         for (int i = 0; i < bullets.size(); i++) {
             Bullet b = bullets.get(i);
@@ -71,14 +81,27 @@ public class GamePanel extends JPanel implements Runnable {
                 if (b.active) {
                     b.move();
                     b.disappear(panelWidth, panelHeight);
+                    // Bullet-wall collision
+                    for (AbstractWall wall : walls) {
+                        if (!wall.isDestroyed() && wall.collidesWith(b.x, b.y, 8, 8)) {
+                            wall.Explode();
+                            b.active = false;
+                            break;
+                        }
+                    }
                 } else {
                     bullets.remove(i);
                     i--;
                 }
             }
-            
-            
-            
+        }
+        player.move(panelWidth, panelHeight);
+        for (AbstractWall wall : walls) {
+            if (!wall.isDestroyed() && wall.collidesWith(player.getX(), player.getY(), player.getWidth(), player.getHeight())) {
+                // Use public getter methods instead of direct field access
+                player.setPosition(player.getPrevX(), player.getPrevY());
+                break;
+            }
         }
     }
 
@@ -86,6 +109,10 @@ public class GamePanel extends JPanel implements Runnable {
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
         Graphics2D g2 = (Graphics2D) g;
+        // Draw walls first
+        for (AbstractWall wall : walls) {
+            wall.draw(g2);
+        }
         player.draw(g2);
         for (Bullet b : bullets) {
             if (b.active) b.draw(g2);

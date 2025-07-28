@@ -13,7 +13,7 @@ public class Brick extends AbstractWall implements Obstacle{
 
     private void loadBrickImage() {
         try {
-            java.net.URL imgURL = getClass().getResource("brick.jpg");
+            java.net.URL imgURL = getClass().getResource("brick.png");
             if (imgURL != null) {
                 setImage(ImageIO.read(imgURL));
             } else {
@@ -24,17 +24,23 @@ public class Brick extends AbstractWall implements Obstacle{
         }
     }
 
-
     @Override
     public void Explode() {
-        destroyed = true;
+        super.Explode();
     }
 
     @Override
     public void StumbleEntity(Entity e) {
-        if (!destroyed && checkCollision(e)) {
-            System.out.println("Entity stumbled on brick at (" + x + ", " + y + ")");
-        }
+        super.StumbleEntity(e);
     }
 
+    @Override
+    public boolean isDestructible() {
+        return true;
+    }
+
+    @Override
+    public void hit() {
+        destroy();
+    }
 }
