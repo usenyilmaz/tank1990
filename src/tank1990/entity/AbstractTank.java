@@ -7,29 +7,70 @@ import java.util.Map;
 
 public abstract class AbstractTank implements Entity {
     protected int x, y;
-    protected int speed;
+    protected int speed = 4;
     public String direction = "UP"; // "UP", "DOWN", "LEFT", "RIGHT"
     protected Map<String, BufferedImage> directionToImage = new HashMap<>();
     protected long lastShotTime = 0;
     protected long fireRate = 300; // milliseconds
     protected int prevX, prevY;
+    protected boolean isSliding = false;
+    protected int lastIceX, lastIceY;
+    protected int slideDistance = 0;
+    protected final int maxSlideDistance = 96; // 2 tiles worth of sliding
 
-    public AbstractTank(int startX, int startY, int speed) {
+    public AbstractTank(int startX, int startY) {
         this.x = startX;
         this.y = startY;
         this.prevX = startX;
         this.prevY = startY;
-        this.speed = speed;
+    }
+
+    public void setSliding(boolean sliding) {
+        this.isSliding = sliding;
+        if (sliding) {
+            slideDistance = 0;
+        }
+    }
+
+    public void setLastIcePosition(int iceX, int iceY) {
+        this.lastIceX = iceX;
+        this.lastIceY = iceY;
+    }
+
+    public boolean isSliding() {
+        return isSliding;
     }
 
     public void move(int panelWidth, int panelHeight) {
         int newX = x, newY = y;
-        switch (direction) {
-            case "UP":    newY -= speed; break;
-            case "DOWN":  newY += speed; break;
-            case "LEFT":  newX -= speed; break;
-            case "RIGHT": newX += speed; break;
+        
+        // If sliding, continue movement in the same direction
+        if (isSliding && slideDistance < maxSlideDistance) {
+            switch (direction) {
+                case "UP":    newY -= speed; break;
+                case "DOWN":  newY += speed; break;
+                case "LEFT":  newX -= speed; break;
+                case "RIGHT": newX += speed; break;
+            }
+            slideDistance += speed;
+            
+            // Stop sliding if we've slid too far or hit a boundary
+            if (slideDistance >= maxSlideDistance || 
+                newX < 0 || newX > panelWidth - getWidth() || 
+                newY < 0 || newY > panelHeight - getHeight()) {
+                isSliding = false;
+                slideDistance = 0;
+            }
+        } else {
+            // Normal movement (when not sliding)
+            switch (direction) {
+                case "UP":    newY -= speed; break;
+                case "DOWN":  newY += speed; break;
+                case "LEFT":  newX -= speed; break;
+                case "RIGHT": newX += speed; break;
+            }
         }
+        
         // Clamp to boundaries (default 48x48 tank)
         if (newX >= 0 && newX <= panelWidth - getWidth() && newY >= 0 && newY <= panelHeight - getHeight()) {
             if (newX != x || newY != y) {

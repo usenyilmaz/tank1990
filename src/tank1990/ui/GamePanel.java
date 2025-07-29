@@ -8,6 +8,8 @@ import tank1990.entity.Bullet;
 import tank1990.entity.KeyHandler;
 import tank1990.entity.Player;
 import tank1990.walls.AbstractWall;
+import tank1990.walls.Bush;
+import tank1990.walls.Ice;
 
 public class GamePanel extends JPanel implements Runnable {
     Player player;
@@ -62,6 +64,12 @@ public class GamePanel extends JPanel implements Runnable {
         else if (keyH.downPressed)  { player.direction = "DOWN"; player.move(panelWidth, panelHeight); }
         else if (keyH.leftPressed)  { player.direction = "LEFT"; player.move(panelWidth, panelHeight); }
         else if (keyH.rightPressed) { player.direction = "RIGHT"; player.move(panelWidth, panelHeight); }
+        else {
+            // No movement keys pressed - check if sliding on ice
+            if (player.isSliding()) {
+                player.move(panelWidth, panelHeight);
+            }
+        }
         // Shoot with Z
         if (keyH.zPressed) {
             Bullet b = player.shoot();
@@ -111,11 +119,11 @@ public class GamePanel extends JPanel implements Runnable {
         for (AbstractWall wall : walls) {
             if (!wall.isDestroyed() && wall.collidesWith(player.getX(), player.getY(), player.getWidth(), player.getHeight())) {
                 wall.StumbleEntity(player); // Call StumbleEntity for player
-                // Only reset player position if wall is destructible (blocks movement)
-                if (wall.isDestructible()) {
-                   player.setPosition(player.getPrevX(), player.getPrevY());
+                // Use public getter methods instead of direct field access
+                if (!(wall instanceof Bush) && !(wall instanceof Ice)) {
+                    player.setPosition(player.getPrevX(), player.getPrevY());
+                    break;
                 }
-                break;
             }
         }
     }
@@ -124,11 +132,21 @@ public class GamePanel extends JPanel implements Runnable {
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
         Graphics2D g2 = (Graphics2D) g;
-        // Draw walls first
+        // Draw non-bush walls first
         for (AbstractWall wall : walls) {
-            wall.draw(g2);
+            if (!(wall instanceof Bush)) {
+                wall.draw(g2);
+            }
         }
+        // Draw player
         player.draw(g2);
+        // Draw bushes after player so they appear in front
+        for (AbstractWall wall : walls) {
+            if (wall instanceof Bush) {
+                wall.draw(g2);
+            }
+        }
+        // Draw bullets
         for (Bullet b : bullets) {
             if (b.active) b.draw(g2);
         }

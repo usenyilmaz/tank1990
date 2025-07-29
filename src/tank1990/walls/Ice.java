@@ -1,8 +1,11 @@
 package tank1990.walls;
 
-import java.io.IOException;
+import java.awt.image.BufferedImage;
 import javax.imageio.ImageIO;
+import java.io.IOException;
 import tank1990.entity.Entity;
+import tank1990.entity.Bullet;
+import tank1990.entity.AbstractTank;
 
 public class Ice extends AbstractWall implements Obstacle {
 
@@ -26,27 +29,40 @@ public class Ice extends AbstractWall implements Obstacle {
 
     @Override
     public void breakObstacle() {
-        // Ice might be easier to break
-        destroyed = true;
+        // Ice cannot be destroyed by bullets
+        // It remains intact
     }
 
     @Override
     public void Explode() {
-        super.Explode();
+        // Ice doesn't explode
+        // It remains intact
     }
 
     @Override
     public void StumbleEntity(Entity e) {
-        super.StumbleEntity(e);
+        // Ice blocks tank movement but allows bullets to pass through
+        if (this.collidesWith(e.getX(), e.getY(), e.getWidth(), e.getHeight())) {
+            if (e instanceof Bullet) {
+                // Bullets pass through ice - do nothing
+                return;
+            } else if (e instanceof AbstractTank) {
+                // Tanks slide on ice - set sliding state
+                AbstractTank tank = (AbstractTank) e;
+                tank.setSliding(true);
+                tank.setLastIcePosition(x, y);
+            }
+        }
     }
 
     @Override
     public boolean isDestructible() {
-        return true;
+        return false; // Ice cannot be destroyed
     }
 
     @Override
     public void hit() {
-        breakObstacle();
+        // Ice doesn't react to being hit
+        // It remains intact
     }
 }

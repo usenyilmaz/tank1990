@@ -2,9 +2,11 @@ package tank1990.walls;
 
 import java.io.IOException;
 import javax.imageio.ImageIO;
+import tank1990.entity.AbstractTank;
+import tank1990.entity.Bullet;
 import tank1990.entity.Entity;
 
-public class Steel extends AbstractWall implements Obstacle{
+public class Steel extends AbstractWall implements Obstacle {
 
     public Steel(int x, int y) {
         super(x, y);
@@ -26,27 +28,39 @@ public class Steel extends AbstractWall implements Obstacle{
 
     @Override
     public void breakObstacle() {
-        // Steel is harder to break - maybe require multiple hits
-        destroyed = true;
+        // Steel cannot be destroyed by bullets
+        // It remains intact
     }
 
     @Override
     public void Explode() {
-        super.Explode();
+        // Steel doesn't explode
+        // It remains intact
     }
 
     @Override
     public void StumbleEntity(Entity e) {
-        super.StumbleEntity(e);
+        // Steel blocks both tank movement and bullets
+        if (this.collidesWith(e.getX(), e.getY(), e.getWidth(), e.getHeight())) {
+            if (e instanceof Bullet) {
+                // Bullets are destroyed when hitting steel
+                Bullet bullet = (Bullet) e;
+                bullet.active = false; // Make the bullet disappear
+            } else if (e instanceof AbstractTank) {
+                // Tanks are blocked by steel
+                // The tank position will be reset in GamePanel collision logic
+            }
+        }
     }
 
     @Override
     public boolean isDestructible() {
-        return true;
+        return false; // Steel cannot be destroyed
     }
 
     @Override
     public void hit() {
-        breakObstacle();
+        // Steel doesn't react to being hit
+        // It remains intact
     }
 }

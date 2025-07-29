@@ -53,7 +53,7 @@ public abstract class AbstractWall {
 
     // Optional: update method for explosion timing
     public void update() {
-        if (exploding && System.currentTimeMillis() - explosionStartTime >= 500) {
+        if (exploding && System.currentTimeMillis() - explosionStartTime >= 300) {
             destroyed = true;
         }
     }
@@ -75,7 +75,7 @@ public abstract class AbstractWall {
         if (destroyed) return;
         if (exploding) {
             long now = System.currentTimeMillis();
-            if (now - explosionStartTime < 500) {
+            if (now - explosionStartTime < 300) {
                 if (explosionImage != null) {
                     g.drawImage(explosionImage, x, y, width, height, null);
                 } else {

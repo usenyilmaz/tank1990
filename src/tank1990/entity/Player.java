@@ -4,7 +4,7 @@ import java.io.IOException;
 
 public class Player extends AbstractTank {
     public Player(int startX, int startY) {
-        super(startX, startY, 2);
+        super(startX, startY);
         loadImages();
     }
 
