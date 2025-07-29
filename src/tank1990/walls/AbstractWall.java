@@ -40,7 +40,6 @@ public abstract class AbstractWall {
     public void StumbleEntity(Entity e) {
         if (this.collidesWith(e.getX(), e.getY(), e.getWidth(), e.getHeight())) {
             // Handle collision - this can be overridden by subclasses
-            System.out.println("Entity stumbled on wall at (" + x + ", " + y + ")");
         }
     }
     

@@ -25,7 +25,7 @@ public class GamePanel extends JPanel implements Runnable {
         this.requestFocusInWindow();
         this.addKeyListener(keyH);
         this.setBackground(Color.BLACK);
-        player = new Player(100, 100);
+        player = new Player(48 * 4, 48 * 12);
         StageGenerator generator = new StageGenerator();
         walls = generator.generateStage(currentStageNumber);
         startGameThread();
@@ -81,25 +81,40 @@ public class GamePanel extends JPanel implements Runnable {
                 if (b.active) {
                     b.move();
                     b.disappear(panelWidth, panelHeight);
-                    // Bullet-wall collision
-                    for (AbstractWall wall : walls) {
-                        if (!wall.isDestroyed() && wall.collidesWith(b.x, b.y, 8, 8)) {
-                            wall.Explode();
-                            b.active = false;
-                            break;
-                        }
-                    }
                 } else {
                     bullets.remove(i);
                     i--;
                 }
             }
         }
+        
+        // Bullet-wall collision (separate loop for better control)
+        for (int i = 0; i < bullets.size(); i++) {
+            Bullet b = bullets.get(i);
+            if (b != null && b.active) {
+                for (AbstractWall wall : walls) {
+                    if (!wall.isDestroyed() && wall.collidesWith(b.x, b.y, 8, 8)) {
+                        wall.StumbleEntity(b); // Call StumbleEntity for bullets
+                        // Only destroy bullet and explode wall if wall is destructible
+                        if (wall.isDestructible()) {
+                            wall.Explode();
+                            b.active = false;
+                        }
+                        // If wall is not destructible (like water), bullet continues
+                        break;
+                    }
+                }
+            }
+        }
+        
         // Player-wall collision
         for (AbstractWall wall : walls) {
             if (!wall.isDestroyed() && wall.collidesWith(player.getX(), player.getY(), player.getWidth(), player.getHeight())) {
-                // Use public getter methods instead of direct field access
-                player.setPosition(player.getPrevX(), player.getPrevY());
+                wall.StumbleEntity(player); // Call StumbleEntity for player
+                // Only reset player position if wall is destructible (blocks movement)
+                if (wall.isDestructible()) {
+                   player.setPosition(player.getPrevX(), player.getPrevY());
+                }
                 break;
             }
         }
