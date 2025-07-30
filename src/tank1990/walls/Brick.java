@@ -35,8 +35,8 @@ public class Brick extends AbstractWall implements Obstacle{
     }
 
     @Override
-    public void StumbleEntity(Entity e) {
-        super.StumbleEntity(e);
+    public boolean StumbleEntity(Entity e) {
+        return super.StumbleEntity(e);
     }
 
     @Override

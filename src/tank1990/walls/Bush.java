@@ -1,11 +1,7 @@
 package tank1990.walls;
 
-import java.awt.image.BufferedImage;
 import javax.imageio.ImageIO;
-import java.io.IOException;
 import tank1990.entity.Entity;
-import tank1990.entity.Bullet;
-import tank1990.entity.AbstractTank;
 
 public class Bush extends AbstractWall implements Obstacle {
 
@@ -16,13 +12,26 @@ public class Bush extends AbstractWall implements Obstacle {
 
     private void loadBushImage() {
         try {
+            // Try multiple approaches to load the image
             java.net.URL imgURL = getClass().getResource("bush.png");
+            if (imgURL == null) {
+                // Try with absolute path
+                imgURL = getClass().getResource("/tank1990/walls/bush.png");
+            }
+            if (imgURL == null) {
+                // Try with File
+                java.io.File file = new java.io.File("src/tank1990/walls/bush.png");
+                if (file.exists()) {
+                    imgURL = file.toURI().toURL();
+                }
+            }
+            
             if (imgURL != null) {
                 setImage(ImageIO.read(imgURL));
             } else {
-                System.err.println("Could not find bush.png");
+                System.err.println("Could not find bush.png in any location");
             }
-        } catch (IOException e) {
+        } catch (Exception e) {
             System.err.println("Could not load bush.png: " + e.getMessage());
         }
     }
@@ -40,12 +49,13 @@ public class Bush extends AbstractWall implements Obstacle {
     }
 
     @Override
-    public void StumbleEntity(Entity e) {
+    public boolean StumbleEntity(Entity e) {
         // Bushes don't block movement for any entity - they're purely decorative
         if (this.collidesWith(e.getX(), e.getY(), e.getWidth(), e.getHeight())) {
             // Do nothing - let all entities pass through
-            return;
+            return false; // No collision
         }
+        return false; // No collision
     }
 
     @Override

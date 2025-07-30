@@ -5,6 +5,7 @@ import java.util.List;
 import tank1990.walls.AbstractWall;
 import tank1990.walls.Brick;
 import tank1990.walls.Bush;
+import tank1990.walls.Eagle;
 import tank1990.walls.Ice;
 import tank1990.walls.Steel;
 import tank1990.walls.Water;
@@ -21,6 +22,10 @@ public class StageGenerator {
         AbstractWall[][] map = new AbstractWall[13][13];
         for(int i = 0; i < map.length; i++){
             for(int j = 0; j < map.length; j++){
+                //eagle
+                if(j == 12 && i == 6){
+                    map[i][j] = new Eagle(48 * i, 48 * j);
+                }
 
 
                 //bushes************************************************

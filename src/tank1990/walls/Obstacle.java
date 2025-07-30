@@ -5,6 +5,6 @@ import tank1990.entity.Entity;
 public interface Obstacle {
     
     void Explode();
-    void StumbleEntity(Entity e);
+    boolean StumbleEntity(Entity e);
 
 }

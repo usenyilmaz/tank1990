@@ -37,10 +37,12 @@ public abstract class AbstractWall {
         explosionStartTime = System.currentTimeMillis();
     }
 
-    public void StumbleEntity(Entity e) {
+    public boolean StumbleEntity(Entity e) {
         if (this.collidesWith(e.getX(), e.getY(), e.getWidth(), e.getHeight())) {
             // Handle collision - this can be overridden by subclasses
+            return true;
         }
+        return false;
     }
     
     // Public collision check for bullets/entities

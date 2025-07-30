@@ -39,18 +39,20 @@ public class Steel extends AbstractWall implements Obstacle {
     }
 
     @Override
-    public void StumbleEntity(Entity e) {
+    public boolean StumbleEntity(Entity e) {
         // Steel blocks both tank movement and bullets
         if (this.collidesWith(e.getX(), e.getY(), e.getWidth(), e.getHeight())) {
             if (e instanceof Bullet) {
                 // Bullets are destroyed when hitting steel
                 Bullet bullet = (Bullet) e;
                 bullet.active = false; // Make the bullet disappear
+                return true; // Collision detected
             } else if (e instanceof AbstractTank) {
                 // Tanks are blocked by steel
-                // The tank position will be reset in GamePanel collision logic
+                return true; // Collision detected
             }
         }
+        return false; // No collision
     }
 
     @Override

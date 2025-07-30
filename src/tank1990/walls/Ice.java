@@ -1,11 +1,10 @@
 package tank1990.walls;
 
-import java.awt.image.BufferedImage;
-import javax.imageio.ImageIO;
 import java.io.IOException;
-import tank1990.entity.Entity;
-import tank1990.entity.Bullet;
+import javax.imageio.ImageIO;
 import tank1990.entity.AbstractTank;
+import tank1990.entity.Bullet;
+import tank1990.entity.Entity;
 
 public class Ice extends AbstractWall implements Obstacle {
 
@@ -40,19 +39,21 @@ public class Ice extends AbstractWall implements Obstacle {
     }
 
     @Override
-    public void StumbleEntity(Entity e) {
+    public boolean StumbleEntity(Entity e) {
         // Ice blocks tank movement but allows bullets to pass through
         if (this.collidesWith(e.getX(), e.getY(), e.getWidth(), e.getHeight())) {
             if (e instanceof Bullet) {
-                // Bullets pass through ice - do nothing
-                return;
+                // Bullets pass through ice - return false (no collision)
+                return false;
             } else if (e instanceof AbstractTank) {
                 // Tanks slide on ice - set sliding state
                 AbstractTank tank = (AbstractTank) e;
                 tank.setSliding(true);
                 tank.setLastIcePosition(x, y);
+                return true; // Collision detected
             }
         }
+        return false; // No collision
     }
 
     @Override
