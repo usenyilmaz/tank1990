@@ -165,17 +165,19 @@ public class GamePanel extends JPanel implements Runnable {
             return;
         }
         
-        int panelWidth = getWidth();
-        int panelHeight = getHeight();
-        // Yön tuşları
-        if (keyH.upPressed)    { player.direction = "UP"; player.move(panelWidth, panelHeight); }
-        else if (keyH.downPressed)  { player.direction = "DOWN"; player.move(panelWidth, panelHeight); }
-        else if (keyH.leftPressed)  { player.direction = "LEFT"; player.move(panelWidth, panelHeight); }
-        else if (keyH.rightPressed) { player.direction = "RIGHT"; player.move(panelWidth, panelHeight); }
+        // Define game area boundaries
+        int gameAreaWidth = 13 * 48;
+        int gameAreaHeight = 13 * 48;
+        
+        // Yön tuşları - use game area boundaries instead of panel boundaries
+        if (keyH.upPressed)    { player.direction = "UP"; player.move(gameAreaWidth, gameAreaHeight); }
+        else if (keyH.downPressed)  { player.direction = "DOWN"; player.move(gameAreaWidth, gameAreaHeight); }
+        else if (keyH.leftPressed)  { player.direction = "LEFT"; player.move(gameAreaWidth, gameAreaHeight); }
+        else if (keyH.rightPressed) { player.direction = "RIGHT"; player.move(gameAreaWidth, gameAreaHeight); }
         else {
             // No movement keys pressed - check if sliding on ice
             if (player.isSliding()) {
-                player.move(panelWidth, panelHeight);
+                player.move(gameAreaWidth, gameAreaHeight);
             }
         }
         // Shoot with Z
@@ -190,13 +192,13 @@ public class GamePanel extends JPanel implements Runnable {
         for (AbstractWall wall : walls) {
             wall.update();
         }
-        // Update bullets
+        // Update bullets - use game area boundaries for bullet disappear check
         for (int i = 0; i < bullets.size(); i++) {
             Bullet b = bullets.get(i);
             if(b != null){
                 if (b.active) {
                     b.move();
-                    b.disappear(panelWidth, panelHeight);
+                    b.disappear(gameAreaWidth, gameAreaHeight);
                     // Bullet-wall collision
                     for (AbstractWall wall : walls) {
                         if (!wall.isDestroyed() && wall.collidesWith(b.x, b.y, 8, 8)) {

@@ -73,7 +73,11 @@ public class SmallBrick extends AbstractWall implements Obstacle {
 
     @Override
     public boolean StumbleEntity(Entity e) {
-        return super.StumbleEntity(e);
+        // Use the correct 24x24 dimensions for collision detection
+        if (this.collidesWith(e.getX(), e.getY(), e.getWidth(), e.getHeight())) {
+            return true; // Collision detected
+        }
+        return false; // No collision
     }
 
     @Override

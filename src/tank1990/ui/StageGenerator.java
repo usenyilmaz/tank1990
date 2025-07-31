@@ -7,6 +7,7 @@ import tank1990.walls.Brick;
 import tank1990.walls.Bush;
 import tank1990.walls.Eagle;
 import tank1990.walls.Ice;
+import tank1990.walls.SmallBrick;
 import tank1990.walls.Steel;
 import tank1990.walls.Water;
 
@@ -26,8 +27,8 @@ public class StageGenerator {
                 if(j == 12 && i == 6){
                     map[i][j] = new Eagle(48 * i, 48 * j);
                 }
-
-
+                //eagle
+                
                 //bushes************************************************
                 if(j == 1 && i == 0){
                     map[i][j] = new Bush(48 * i, 48 * j);
@@ -347,13 +348,27 @@ public class StageGenerator {
             }
             
         }
+        
+
         for (int i = 0; i < map.length; i++) {
+
             for (int j = 0; j < map[i].length; j++) {
                 if (map[i][j] != null) {
                     walls.add(map[i][j]);
                 }
             }
         }
+
+        walls.add(new SmallBrick(48 * 6 - 24, 48 * 12));
+        walls.add(new SmallBrick(48 * 6 - 24, 48 * 12 - 24));
+        walls.add(new SmallBrick(48 * 6 - 24, 48 * 12 + 24));
+
+        walls.add(new SmallBrick(48 * 6, 48 * 12 - 24));
+        walls.add(new SmallBrick(48 * 6 + 24, 48 * 12 - 24));
+
+        walls.add(new SmallBrick(48 * 6 + 48, 48 * 12));
+        walls.add(new SmallBrick(48 * 6 + 48, 48 * 12 - 24));
+        walls.add(new SmallBrick(48 * 6 + 48, 48 * 12 + 24));
 
         return walls;
     }
