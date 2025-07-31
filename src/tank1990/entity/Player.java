@@ -3,8 +3,8 @@ package tank1990.entity;
 import java.io.IOException;
 
 public class Player extends AbstractTank {
-    public Player(int startX, int startY) {
-        super(startX, startY);
+    public Player(int startX, int startY, int speed) {
+        super(startX, startY, speed);
         loadImages();
     }
 

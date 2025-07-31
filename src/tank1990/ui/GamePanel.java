@@ -11,6 +11,7 @@ import tank1990.game.GameManager;
 import tank1990.walls.AbstractWall;
 import tank1990.walls.Bush;
 import tank1990.walls.Ice;
+import tank1990.walls.Water;
 
 public class GamePanel extends JPanel implements Runnable {
     Player player;
@@ -34,7 +35,7 @@ public class GamePanel extends JPanel implements Runnable {
         this.requestFocusInWindow();
         this.addKeyListener(keyH);
         this.setBackground(Color.BLACK);
-        player = new Player(48 * 4, 48 * 12);
+        player = new Player(48 * 4, 48 * 12, 2);
         StageGenerator generator = new StageGenerator();
         walls = generator.generateStage(currentStageNumber);
         loadFlagImage();
@@ -202,7 +203,14 @@ public class GamePanel extends JPanel implements Runnable {
                     // Bullet-wall collision
                     for (AbstractWall wall : walls) {
                         if (!wall.isDestroyed() && wall.collidesWith(b.x, b.y, 8, 8)) {
-                            wall.Explode();
+                            // Check if wall should be affected by bullets
+                            if (wall.isDestructible()) {
+                                wall.Explode();
+                            }
+                            if (wall instanceof Bush || wall instanceof Water) {
+                                // Bullet passes through bush or water, no interaction
+                                continue;
+                            }
                             b.active = false;
                             break;
                         }
@@ -259,7 +267,7 @@ public class GamePanel extends JPanel implements Runnable {
         
         // Draw grey rectangle for the gap between game map and right border
         g2.setColor(Color.GRAY);
-        int gapX = 12 * 48;
+        int gapX = 13 * 48;
         int gapY = 0;
         int gapWidth = getWidth() - gapX;
         int gapHeight = 13 * 48;

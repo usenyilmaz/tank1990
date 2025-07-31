@@ -7,7 +7,7 @@ import java.util.Map;
 
 public abstract class AbstractTank implements Entity {
     protected int x, y;
-    protected int speed = 4;
+    protected int speed;
     public String direction = "UP"; // "UP", "DOWN", "LEFT", "RIGHT"
     protected Map<String, BufferedImage> directionToImage = new HashMap<>();
     protected long lastShotTime = 0;
@@ -18,11 +18,12 @@ public abstract class AbstractTank implements Entity {
     protected int slideDistance = 0;
     protected final int maxSlideDistance = 96; // 2 tiles worth of sliding
 
-    public AbstractTank(int startX, int startY) {
+    public AbstractTank(int startX, int startY, int speed) {
         this.x = startX;
         this.y = startY;
         this.prevX = startX;
         this.prevY = startY;
+        this.speed = speed;
     }
 
     public void setSliding(boolean sliding) {
