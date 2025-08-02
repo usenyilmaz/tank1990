@@ -4,9 +4,14 @@ import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
 import javax.swing.*;
+import tank1990.entity.AbstractTank;
+import tank1990.entity.ArmorTank;
+import tank1990.entity.BasicTank;
 import tank1990.entity.Bullet;
+import tank1990.entity.FastTank;
 import tank1990.entity.KeyHandler;
 import tank1990.entity.Player;
+import tank1990.entity.PowerTank;
 import tank1990.game.GameManager;
 import tank1990.walls.AbstractWall;
 import tank1990.walls.Bush;
@@ -18,7 +23,21 @@ public class GamePanel extends JPanel implements Runnable {
     KeyHandler keyH;
     Thread gameThread;
     List<Bullet> bullets = new ArrayList<>();
+    List<Bullet> enemyBullets = new ArrayList<>();
     List<AbstractWall> walls = new ArrayList<>();
+    
+    // Enemy tank lists
+    List<BasicTank> basicTanks = new ArrayList<>();
+    List<FastTank> fastTanks = new ArrayList<>();
+    List<PowerTank> powerTanks = new ArrayList<>();
+    List<ArmorTank> armorTanks = new ArrayList<>();
+    
+    // Tank management
+    private static final int MAX_BASIC_TANKS = 1;
+    private static final int MAX_FAST_TANKS = 1;
+    private static final int MAX_POWER_TANKS = 1;
+    private static final int MAX_ARMOR_TANKS = 1;
+    
     private int fps = 0;
     private int currentStageNumber;
     private GameManager gameManager;
@@ -35,13 +54,51 @@ public class GamePanel extends JPanel implements Runnable {
         this.requestFocusInWindow();
         this.addKeyListener(keyH);
         this.setBackground(Color.BLACK);
-        player = new Player(48 * 4, 48 * 12, 2);
+        player = new Player(48 * 4, 48 * 12);
         StageGenerator generator = new StageGenerator();
         walls = generator.generateStage(currentStageNumber);
         loadFlagImage();
         loadLivesImages();
+        initializeEnemyTanks();
         gameManager.startGame();
         startGameThread();
+    }
+
+    private void initializeEnemyTanks() {
+        // Spawn initial enemy tanks
+        for (int i = 0; i < MAX_BASIC_TANKS; i++) {
+            basicTanks.add(BasicTank.spawn(player));
+        }
+        for (int i = 0; i < MAX_FAST_TANKS; i++) {
+            fastTanks.add(FastTank.spawn(player));
+        }
+        for (int i = 0; i < MAX_POWER_TANKS; i++) {
+            powerTanks.add(PowerTank.spawn(player));
+        }
+        for (int i = 0; i < MAX_ARMOR_TANKS; i++) {
+            armorTanks.add(ArmorTank.spawn(player));
+        }
+        
+        // Set panel dimensions for all tanks
+        setTankPanelDimensions();
+    }
+    
+    private void setTankPanelDimensions() {
+        int gameAreaWidth = 13 * 48;
+        int gameAreaHeight = 13 * 48;
+        
+        for (BasicTank tank : basicTanks) {
+            tank.setPanelDimensions(gameAreaWidth, gameAreaHeight);
+        }
+        for (FastTank tank : fastTanks) {
+            tank.setPanelDimensions(gameAreaWidth, gameAreaHeight);
+        }
+        for (PowerTank tank : powerTanks) {
+            tank.setPanelDimensions(gameAreaWidth, gameAreaHeight);
+        }
+        for (ArmorTank tank : armorTanks) {
+            tank.setPanelDimensions(gameAreaWidth, gameAreaHeight);
+        }
     }
 
     private void loadFlagImage() {
@@ -189,38 +246,20 @@ public class GamePanel extends JPanel implements Runnable {
             }
             keyH.zPressed = false;
         }
+        
+        // Update enemy tanks and their AI shooting
+        updateEnemyTanks();
+        
         // Update walls
         for (AbstractWall wall : walls) {
             wall.update();
         }
-        // Update bullets - use game area boundaries for bullet disappear check
-        for (int i = 0; i < bullets.size(); i++) {
-            Bullet b = bullets.get(i);
-            if(b != null){
-                if (b.active) {
-                    b.move();
-                    b.disappear(gameAreaWidth, gameAreaHeight);
-                    // Bullet-wall collision
-                    for (AbstractWall wall : walls) {
-                        if (!wall.isDestroyed() && wall.collidesWith(b.x, b.y, 8, 8)) {
-                            // Check if wall should be affected by bullets
-                            if (wall.isDestructible()) {
-                                wall.Explode();
-                            }
-                            if (wall instanceof Bush || wall instanceof Water) {
-                                // Bullet passes through bush or water, no interaction
-                                continue;
-                            }
-                            b.active = false;
-                            break;
-                        }
-                    }
-                } else {
-                    bullets.remove(i);
-                    i--;
-                }
-            }
-        }
+        
+        // Update player bullets
+        updatePlayerBullets(gameAreaWidth, gameAreaHeight);
+        
+        // Update enemy bullets
+        updateEnemyBullets(gameAreaWidth, gameAreaHeight);
         
         // Player-wall collision
         for (AbstractWall wall : walls) {
@@ -241,27 +280,285 @@ public class GamePanel extends JPanel implements Runnable {
                              ", Eagle Destroyed: " + gameManager.isEagleDestroyed());
         }
     }
+    
+    private void updateEnemyTanks() {
+        // Update BasicTanks
+        for (int i = basicTanks.size() - 1; i >= 0; i--) {
+            BasicTank tank = basicTanks.get(i);
+            if (tank.isExploding()) {
+                // Check if explosion is finished
+                long explosionTime = System.currentTimeMillis() - tank.getExplosionStartTime();
+                if (explosionTime >= 300) { // 0.3 seconds
+                    basicTanks.remove(i);
+                }
+            } else {
+                // Move the tank in the main game loop
+                tank.move(13 * 48, 13 * 48);
+                
+                Bullet enemyBullet = tank.aiShoot();
+                if (enemyBullet != null) {
+                    enemyBullets.add(enemyBullet);
+                }
+                // Check wall collision for BasicTanks
+                checkEnemyTankWallCollision(tank);
+            }
+        }
+        
+        // Update FastTanks
+        for (int i = fastTanks.size() - 1; i >= 0; i--) {
+            FastTank tank = fastTanks.get(i);
+            if (tank.isExploding()) {
+                // Check if explosion is finished
+                long explosionTime = System.currentTimeMillis() - tank.getExplosionStartTime();
+                if (explosionTime >= 300) { // 0.3 seconds
+                    fastTanks.remove(i);
+                }
+            } else {
+                // Move the tank in the main game loop
+                tank.move(13 * 48, 13 * 48);
+                
+                Bullet enemyBullet = tank.aiShoot();
+                if (enemyBullet != null) {
+                    enemyBullets.add(enemyBullet);
+                }
+                // Check wall collision for FastTanks
+                checkEnemyTankWallCollision(tank);
+            }
+        }
+        
+        // Update PowerTanks
+        for (int i = powerTanks.size() - 1; i >= 0; i--) {
+            PowerTank tank = powerTanks.get(i);
+            if (tank.isExploding()) {
+                // Check if explosion is finished
+                long explosionTime = System.currentTimeMillis() - tank.getExplosionStartTime();
+                if (explosionTime >= 300) { // 0.3 seconds
+                    powerTanks.remove(i);
+                }
+            } else {
+                // Move the tank in the main game loop
+                tank.move(13 * 48, 13 * 48);
+                
+                Bullet enemyBullet = tank.aiShoot();
+                if (enemyBullet != null) {
+                    enemyBullets.add(enemyBullet);
+                }
+                // Check wall collision for PowerTanks
+                checkEnemyTankWallCollision(tank);
+            }
+        }
+        
+        // Update ArmorTanks
+        for (int i = armorTanks.size() - 1; i >= 0; i--) {
+            ArmorTank tank = armorTanks.get(i);
+            if (tank.isExploding()) {
+                // Check if explosion is finished
+                long explosionTime = System.currentTimeMillis() - tank.getExplosionStartTime();
+                if (explosionTime >= 300) { // 0.3 seconds
+                    armorTanks.remove(i);
+                }
+            } else {
+                // Move the tank in the main game loop
+                tank.move(13 * 48, 13 * 48);
+                
+                Bullet enemyBullet = tank.aiShoot();
+                if (enemyBullet != null) {
+                    enemyBullets.add(enemyBullet);
+                }
+                // Check wall collision for ArmorTanks
+                checkEnemyTankWallCollision(tank);
+            }
+        }
+        
+        // Respawn tanks if all are dead
+        if (basicTanks.isEmpty() && fastTanks.isEmpty() && powerTanks.isEmpty() && armorTanks.isEmpty()) {
+            respawnEnemyTanks();
+        }
+    }
+    
+    private void respawnEnemyTanks() {
+        // Spawn new enemy tanks
+        for (int i = 0; i < MAX_BASIC_TANKS; i++) {
+            basicTanks.add(BasicTank.spawn(player));
+        }
+        for (int i = 0; i < MAX_FAST_TANKS; i++) {
+            fastTanks.add(FastTank.spawn(player));
+        }
+        for (int i = 0; i < MAX_POWER_TANKS; i++) {
+            powerTanks.add(PowerTank.spawn(player));
+        }
+        for (int i = 0; i < MAX_ARMOR_TANKS; i++) {
+            armorTanks.add(ArmorTank.spawn(player));
+        }
+        
+        // Set panel dimensions for all tanks
+        setTankPanelDimensions();
+    }
+    
+    private void checkEnemyTankWallCollision(AbstractTank tank) {
+        for (AbstractWall wall : walls) {
+            if (!wall.isDestroyed() && wall.collidesWith(tank.getX(), tank.getY(), tank.getWidth(), tank.getHeight())) {
+                wall.StumbleEntity(tank); // Call StumbleEntity for enemy tank
+                // Use public getter methods instead of direct field access
+                if (!(wall instanceof Bush) && !(wall instanceof Ice)) {
+                    tank.setPosition(tank.getPrevX(), tank.getPrevY());
+                    break;
+                }
+            }
+        }
+    }
+    
+    private void updatePlayerBullets(int gameAreaWidth, int gameAreaHeight) {
+        for (int i = 0; i < bullets.size(); i++) {
+            Bullet b = bullets.get(i);
+            if(b != null){
+                if (b.active) {
+                    b.move();
+                    b.disappear(gameAreaWidth, gameAreaHeight);
+                    
+                    // Bullet-wall collision
+                    for (AbstractWall wall : walls) {
+                        if (!wall.isDestroyed() && wall.collidesWith(b.x, b.y, 8, 8)) {
+                            // Check if wall should be affected by bullets
+                            if (wall.isDestructible()) {
+                                wall.Explode();
+                            }
+                            if (wall instanceof Bush || wall instanceof Water) {
+                                // Bullet passes through bush or water, no interaction
+                                continue;
+                            }
+                            b.active = false;
+                            break;
+                        }
+                    }
+                    
+                    // Player bullet vs enemy tank collisions
+                    checkPlayerBulletEnemyTankCollisions(b);
+                    
+                } else {
+                    bullets.remove(i);
+                    i--;
+                }
+            }
+        }
+    }
+    
+    private void updateEnemyBullets(int gameAreaWidth, int gameAreaHeight) {
+        for (int i = 0; i < enemyBullets.size(); i++) {
+            Bullet b = enemyBullets.get(i);
+            if(b != null){
+                if (b.active) {
+                    b.move();
+                    b.disappear(gameAreaWidth, gameAreaHeight);
+                    
+                    // Enemy bullet vs wall collision
+                    for (AbstractWall wall : walls) {
+                        if (!wall.isDestroyed() && wall.collidesWith(b.x, b.y, 8, 8)) {
+                            if (wall instanceof Bush || wall instanceof Water) {
+                                // Bullet passes through bush or water
+                                continue;
+                            }
+                            b.active = false;
+                            break;
+                        }
+                    }
+                    
+                    // Enemy bullet vs player collision
+                    if (b.active && playerCollidesWithBullet(b)) {
+                        player.die();
+                        b.active = false;
+                    }
+                    
+                } else {
+                    enemyBullets.remove(i);
+                    i--;
+                }
+            }
+        }
+    }
+    
+    private void checkPlayerBulletEnemyTankCollisions(Bullet bullet) {
+        // Check BasicTanks
+        for (BasicTank tank : basicTanks) {
+            if (tank.getHit(bullet)) {
+                bullet.active = false;
+                break;
+            }
+        }
+        
+        // Check FastTanks
+        for (FastTank tank : fastTanks) {
+            if (tank.getHit(bullet)) {
+                bullet.active = false;
+                break;
+            }
+        }
+        
+        // Check PowerTanks
+        for (PowerTank tank : powerTanks) {
+            if (tank.getHit(bullet)) {
+                bullet.active = false;
+                break;
+            }
+        }
+        
+        // Check ArmorTanks
+        for (ArmorTank tank : armorTanks) {
+            if (tank.getHit(bullet)) {
+                bullet.active = false;
+                break;
+            }
+        }
+    }
+    
+    private boolean playerCollidesWithBullet(Bullet bullet) {
+        return bullet.getX() < player.getX() + player.getWidth() &&
+               bullet.getX() + bullet.getWidth() > player.getX() &&
+               bullet.getY() < player.getY() + player.getHeight() &&
+               bullet.getY() + bullet.getHeight() > player.getY();
+    }
 
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
         Graphics2D g2 = (Graphics2D) g;
+        
         // Draw non-bush walls first
         for (AbstractWall wall : walls) {
             if (!(wall instanceof Bush)) {
                 wall.draw(g2);
             }
         }
+        
         // Draw player
         player.draw(g2);
-        // Draw bushes after player so they appear on top and hide tanks
+        
+        // Draw enemy tanks
+        for (BasicTank tank : basicTanks) {
+            tank.draw(g2);
+        }
+        for (FastTank tank : fastTanks) {
+            tank.draw(g2);
+        }
+        for (PowerTank tank : powerTanks) {
+            tank.draw(g2);
+        }
+        for (ArmorTank tank : armorTanks) {
+            tank.draw(g2);
+        }
+        
+        // Draw bushes after player and tanks so they appear on top
         for (AbstractWall wall : walls) {
             if (wall instanceof Bush) {
                 wall.draw(g2);
             }
         }
+        
         // Draw bullets
         for (Bullet b : bullets) {
+            if (b.active) b.draw(g2);
+        }
+        for (Bullet b : enemyBullets) {
             if (b.active) b.draw(g2);
         }
         
@@ -286,6 +583,9 @@ public class GamePanel extends JPanel implements Runnable {
         
         String stageText = "Stage: " + gameManager.getCurrentStage();
         g2.drawString(stageText, 10, 40);
+        
+        String pointsText = "Points: " + player.getPointsgained();
+        g2.drawString(pointsText, 10, 60);
         
         // Draw flag and stage number at bottom right
         if (flagIcon != null) {

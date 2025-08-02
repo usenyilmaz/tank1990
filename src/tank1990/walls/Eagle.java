@@ -41,7 +41,9 @@ public class Eagle extends AbstractWall implements Obstacle {
     public void Explode() {
         // Eagle explosion triggers game over
         GameManager.getInstance().eagleDestroyed();
-        super.Explode();
+        // Call the parent Explode method
+        exploding = true;
+        explosionStartTime = System.currentTimeMillis();
     }
 
     @Override

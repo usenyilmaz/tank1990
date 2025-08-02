@@ -18,12 +18,12 @@ public abstract class AbstractTank implements Entity {
     protected int slideDistance = 0;
     protected final int maxSlideDistance = 96; // 2 tiles worth of sliding
 
-    public AbstractTank(int startX, int startY, int speed) {
+    public AbstractTank(int startX, int startY) {
         this.x = startX;
         this.y = startY;
         this.prevX = startX;
         this.prevY = startY;
-        this.speed = speed;
+        this.speed = 2; // Initialize with default speed
     }
 
     public void setSliding(boolean sliding) {
@@ -143,4 +143,10 @@ public abstract class AbstractTank implements Entity {
     public void setprevY(int newprevY){
         prevY = newprevY;
     }
+
+    public long getExplosionStartTime() {
+        return 0; // Default implementation, will be overridden by subclasses
+    }
+
+    abstract void die();
 }
