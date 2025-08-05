@@ -42,9 +42,21 @@ public class GamePanel extends JPanel implements Runnable {
     private int currentStageNumber;
     private GameManager gameManager;
     private ImageIcon flagIcon;
+    private ImageIcon threeLivesIcon;
     private ImageIcon twoLivesIcon;
     private ImageIcon oneLiveIcon;
     private ImageIcon zeroLivesIcon;
+    
+    // Stage progression variables
+    private int waveCount = 0;
+    private int totalTanksKilled = 0;
+    private static final int TANKS_PER_WAVE = 4;
+    private static final int TOTAL_WAVES_PER_STAGE = 3;
+    private static final int TOTAL_TANKS_PER_STAGE = TANKS_PER_WAVE * TOTAL_WAVES_PER_STAGE; // 12 tanks
+    
+    // Pause functionality
+    private boolean isPaused = false;
+    private JButton pauseButton;
 
     public GamePanel(int currentStageNumber) {
         this.currentStageNumber = currentStageNumber;
@@ -60,12 +72,173 @@ public class GamePanel extends JPanel implements Runnable {
         loadFlagImage();
         loadLivesImages();
         initializeEnemyTanks();
-        gameManager.startGame();
+        initializePauseButton();
+        gameManager.startGame(); // Ensure game starts in PLAYING state
         startGameThread();
+        ensurePauseButtonVisible();
+    }
+    
+    private void ensurePauseButtonVisible() {
+        // Ensure the pause button is always visible and on top
+        if (pauseButton != null) {
+            pauseButton.setVisible(true);
+            this.setComponentZOrder(pauseButton, 0);
+            pauseButton.repaint();
+            this.repaint();
+        }
+    }
+    
+    private void initializePauseButton() {
+        pauseButton = new JButton("PAUSE");
+        pauseButton.setBounds(700, 10, 80, 30); // Fixed position instead of using getWidth()
+        pauseButton.setOpaque(true);
+        pauseButton.setBackground(Color.RED);
+        pauseButton.setForeground(Color.WHITE);
+        pauseButton.setFont(new Font("Arial", Font.BOLD, 12));
+        pauseButton.addActionListener(e -> togglePause());
+        pauseButton.setFocusPainted(false); // Don't show focus border
+        pauseButton.setBorderPainted(false); // Don't show border
+        pauseButton.setContentAreaFilled(true);
+        pauseButton.setBorder(null);
+        
+        // Set the panel to use absolute positioning
+        this.setLayout(null);
+        this.add(pauseButton);
+        
+        // Ensure button is visible and on top
+        pauseButton.setVisible(true);
+        pauseButton.repaint();
+        
+        // Force the button to be on top of all other components
+        this.setComponentZOrder(pauseButton, 0);
+        pauseButton.requestFocusInWindow();
+    }
+    
+    private void togglePause() {
+        if (isPaused) {
+            resumeGame();
+        } else {
+            pauseGame();
+        }
+    }
+    
+    private void pauseGame() {
+        isPaused = true;
+        pauseButton.setText("RESUME");
+        saveGameState();
+        gameManager.pauseGame();
+    }
+    
+    private void resumeGame() {
+        isPaused = false;
+        pauseButton.setText("PAUSE");
+        // Don't load game state on resume - just continue from current state
+        gameManager.resumeGame();
+        // Ensure the game continues properly
+        this.requestFocusInWindow();
+        ensureGameFocus();
+    }
+    
+    private void ensureGameFocus() {
+        // Ensure the game panel has focus for key input
+        this.setFocusable(true);
+        this.requestFocusInWindow();
+        if (keyH != null) {
+            this.addKeyListener(keyH);
+        }
+    }
+    
+    private void saveGameState() {
+        try {
+            java.io.FileWriter writer = new java.io.FileWriter("game_save.txt");
+            writer.write("Stage:" + currentStageNumber + "\n");
+            writer.write("Wave:" + waveCount + "\n");
+            writer.write("TanksKilled:" + totalTanksKilled + "\n");
+            writer.write("PlayerPoints:" + player.getPointsgained() + "\n");
+            writer.write("PlayerLives:" + gameManager.getPlayerLives() + "\n");
+            writer.write("PlayerX:" + player.getX() + "\n");
+            writer.write("PlayerY:" + player.getY() + "\n");
+            
+            // Save enemy tanks
+            writer.write("BasicTanks:" + basicTanks.size() + "\n");
+            for (BasicTank tank : basicTanks) {
+                if (!tank.isExploding()) {
+                    writer.write("BasicTank:" + tank.getX() + "," + tank.getY() + "\n");
+                }
+            }
+            
+            writer.write("FastTanks:" + fastTanks.size() + "\n");
+            for (FastTank tank : fastTanks) {
+                if (!tank.isExploding()) {
+                    writer.write("FastTank:" + tank.getX() + "," + tank.getY() + "\n");
+                }
+            }
+            
+            writer.write("PowerTanks:" + powerTanks.size() + "\n");
+            for (PowerTank tank : powerTanks) {
+                if (!tank.isExploding()) {
+                    writer.write("PowerTank:" + tank.getX() + "," + tank.getY() + "\n");
+                }
+            }
+            
+            writer.write("ArmorTanks:" + armorTanks.size() + "\n");
+            for (ArmorTank tank : armorTanks) {
+                if (!tank.isExploding()) {
+                    writer.write("ArmorTank:" + tank.getX() + "," + tank.getY() + "\n");
+                }
+            }
+            
+            writer.close();
+        } catch (Exception e) {
+            System.err.println("Error saving game state: " + e.getMessage());
+        }
+    }
+    
+    private void loadGameState() {
+        try {
+            java.io.File file = new java.io.File("game_save.txt");
+            if (!file.exists()) return;
+            
+            java.io.BufferedReader reader = new java.io.BufferedReader(new java.io.FileReader(file));
+            String line;
+            
+            while ((line = reader.readLine()) != null) {
+                String[] parts = line.split(":");
+                if (parts.length < 2) continue;
+                
+                switch (parts[0]) {
+                    case "Stage":
+                        currentStageNumber = Integer.parseInt(parts[1]);
+                        break;
+                    case "Wave":
+                        waveCount = Integer.parseInt(parts[1]);
+                        break;
+                    case "TanksKilled":
+                        totalTanksKilled = Integer.parseInt(parts[1]);
+                        break;
+                    case "PlayerPoints":
+                        player.ResetPoints();
+                        player.IncreasePointsby(Integer.parseInt(parts[1]));
+                        break;
+                    case "PlayerX":
+                        int playerX = Integer.parseInt(parts[1]);
+                        int playerY = Integer.parseInt(reader.readLine().split(":")[1]);
+                        player.setPosition(playerX, playerY);
+                        break;
+                }
+            }
+            reader.close();
+        } catch (Exception e) {
+            System.err.println("Error loading game state: " + e.getMessage());
+        }
     }
 
     private void initializeEnemyTanks() {
-        // Spawn initial enemy tanks
+        // Initialize first wave
+        waveCount = 1;
+        totalTanksKilled = 0;
+        
+        // Spawn initial wave of tanks
         for (int i = 0; i < MAX_BASIC_TANKS; i++) {
             basicTanks.add(BasicTank.spawn(player));
         }
@@ -129,62 +302,20 @@ public class GamePanel extends JPanel implements Runnable {
 
     private void loadLivesImages() {
         try {
-            // Try multiple approaches to load the lives images
-            java.net.URL imgURL = getClass().getResource("twolives.png");
-            if (imgURL == null) {
-                // Try with absolute path
-                imgURL = getClass().getResource("/tank1990/ui/twolives.png");
-            }
-            if (imgURL == null) {
-                // Try with File
-                java.io.File file = new java.io.File("src/tank1990/ui/twolives.png");
-                if (file.exists()) {
-                    imgURL = file.toURI().toURL();
-                }
-            }
-            if (imgURL != null) {
-                twoLivesIcon = new ImageIcon(imgURL);
+            // Try to load threelives.png, fallback to twolives.png if not found
+            java.net.URL threeLivesURL = getClass().getResource("threelives.png");
+            if (threeLivesURL != null) {
+                threeLivesIcon = new ImageIcon(threeLivesURL);
             } else {
-                System.err.println("Could not find twolives.png in any location");
+                // Use twolives.png as fallback for 3 lives
+                threeLivesIcon = new ImageIcon(getClass().getResource("twolives.png"));
             }
-
-            imgURL = getClass().getResource("onelive.png");
-            if (imgURL == null) {
-                // Try with absolute path
-                imgURL = getClass().getResource("/tank1990/ui/onelive.png");
-            }
-            if (imgURL == null) {
-                // Try with File
-                java.io.File file = new java.io.File("src/tank1990/ui/onelive.png");
-                if (file.exists()) {
-                    imgURL = file.toURI().toURL();
-                }
-            }
-            if (imgURL != null) {
-                oneLiveIcon = new ImageIcon(imgURL);
-            } else {
-                System.err.println("Could not find onelive.png in any location");
-            }
-
-            imgURL = getClass().getResource("zerolives.png");
-            if (imgURL == null) {
-                // Try with absolute path
-                imgURL = getClass().getResource("/tank1990/ui/zerolives.png");
-            }
-            if (imgURL == null) {
-                // Try with File
-                java.io.File file = new java.io.File("src/tank1990/ui/zerolives.png");
-                if (file.exists()) {
-                    imgURL = file.toURI().toURL();
-                }
-            }
-            if (imgURL != null) {
-                zeroLivesIcon = new ImageIcon(imgURL);
-            } else {
-                System.err.println("Could not find zerolives.png in any location");
-            }
+            
+            twoLivesIcon = new ImageIcon(getClass().getResource("twolives.png"));
+            oneLiveIcon = new ImageIcon(getClass().getResource("onelive.png"));
+            zeroLivesIcon = new ImageIcon(getClass().getResource("zerolives.png"));
         } catch (Exception e) {
-            System.err.println("Could not load lives images: " + e.getMessage());
+            System.err.println("Error loading lives images: " + e.getMessage());
         }
     }
 
@@ -212,15 +343,21 @@ public class GamePanel extends JPanel implements Runnable {
     }
 
     public void update() {
+        // Check if game is paused
+        if (isPaused) {
+            return; // Don't update game logic when paused
+        }
+        
         // Check game state first
         if (gameManager.isGameOver()) {
             // Game over - stop updating
             return;
         }
         
-        if (!gameManager.isPlaying()) {
-            // Game is paused or in menu - don't update game logic
-            return;
+        // Ensure key handler is working
+        if (keyH == null) {
+            keyH = new KeyHandler();
+            this.addKeyListener(keyH);
         }
         
         // Define game area boundaries
@@ -290,6 +427,7 @@ public class GamePanel extends JPanel implements Runnable {
                 long explosionTime = System.currentTimeMillis() - tank.getExplosionStartTime();
                 if (explosionTime >= 300) { // 0.3 seconds
                     basicTanks.remove(i);
+                    totalTanksKilled++; // Track killed tank
                 }
             } else {
                 // Move the tank in the main game loop
@@ -312,6 +450,7 @@ public class GamePanel extends JPanel implements Runnable {
                 long explosionTime = System.currentTimeMillis() - tank.getExplosionStartTime();
                 if (explosionTime >= 300) { // 0.3 seconds
                     fastTanks.remove(i);
+                    totalTanksKilled++; // Track killed tank
                 }
             } else {
                 // Move the tank in the main game loop
@@ -334,6 +473,7 @@ public class GamePanel extends JPanel implements Runnable {
                 long explosionTime = System.currentTimeMillis() - tank.getExplosionStartTime();
                 if (explosionTime >= 300) { // 0.3 seconds
                     powerTanks.remove(i);
+                    totalTanksKilled++; // Track killed tank
                 }
             } else {
                 // Move the tank in the main game loop
@@ -356,6 +496,7 @@ public class GamePanel extends JPanel implements Runnable {
                 long explosionTime = System.currentTimeMillis() - tank.getExplosionStartTime();
                 if (explosionTime >= 300) { // 0.3 seconds
                     armorTanks.remove(i);
+                    totalTanksKilled++; // Track killed tank
                 }
             } else {
                 // Move the tank in the main game loop
@@ -370,13 +511,22 @@ public class GamePanel extends JPanel implements Runnable {
             }
         }
         
-        // Respawn tanks if all are dead
+        // Check if all tanks are dead and handle stage progression
         if (basicTanks.isEmpty() && fastTanks.isEmpty() && powerTanks.isEmpty() && armorTanks.isEmpty()) {
-            respawnEnemyTanks();
+            if (totalTanksKilled >= TOTAL_TANKS_PER_STAGE) {
+                // All 12 tanks killed - advance to next stage
+                advanceToNextStage();
+            } else if (waveCount < TOTAL_WAVES_PER_STAGE) {
+                // Spawn next wave
+                respawnEnemyTanks();
+            }
         }
     }
     
     private void respawnEnemyTanks() {
+        // Increment wave count
+        waveCount++;
+        
         // Spawn new enemy tanks
         for (int i = 0; i < MAX_BASIC_TANKS; i++) {
             basicTanks.add(BasicTank.spawn(player));
@@ -393,6 +543,32 @@ public class GamePanel extends JPanel implements Runnable {
         
         // Set panel dimensions for all tanks
         setTankPanelDimensions();
+    }
+    
+    private void advanceToNextStage() {
+        // Increment stage number
+        currentStageNumber++;
+        
+        // Reset wave and tank counters for new stage
+        waveCount = 0;
+        totalTanksKilled = 0;
+        
+        // Clear all bullets
+        bullets.clear();
+        enemyBullets.clear();
+        
+        // Clear all walls and regenerate stage
+        walls.clear();
+        
+        // Generate new stage layout using StageGenerator
+        StageGenerator stageGen = new StageGenerator();
+        walls = stageGen.generateStage(currentStageNumber);
+        
+        // Spawn first wave of new stage
+        respawnEnemyTanks();
+        
+        // Reset player position for new stage
+        player.setPosition(48 * 4, 48 * 12);
     }
     
     private void checkEnemyTankWallCollision(AbstractTank tank) {
@@ -421,7 +597,7 @@ public class GamePanel extends JPanel implements Runnable {
                         if (!wall.isDestroyed() && wall.collidesWith(b.x, b.y, 8, 8)) {
                             // Check if wall should be affected by bullets
                             if (wall.isDestructible()) {
-                                wall.Explode();
+                            wall.Explode();
                             }
                             if (wall instanceof Bush || wall instanceof Water) {
                                 // Bullet passes through bush or water, no interaction
@@ -452,7 +628,7 @@ public class GamePanel extends JPanel implements Runnable {
                     b.disappear(gameAreaWidth, gameAreaHeight);
                     
                     // Enemy bullet vs wall collision
-                    for (AbstractWall wall : walls) {
+        for (AbstractWall wall : walls) {
                         if (!wall.isDestroyed() && wall.collidesWith(b.x, b.y, 8, 8)) {
                             if (wall instanceof Bush || wall instanceof Water) {
                                 // Bullet passes through bush or water
@@ -523,10 +699,19 @@ public class GamePanel extends JPanel implements Runnable {
         super.paintComponent(g);
         Graphics2D g2 = (Graphics2D) g;
         
-        // Draw non-bush walls first
+        // Draw grey rectangle for the gap between game map and right border FIRST
+        g2.setColor(Color.GRAY);
+        int gapX = 13 * 48;
+        int gapY = 0;
+        int gapWidth = getWidth() - gapX;
+        int gapHeight = 13 * 48;
+        // Don't cover the top area where the pause button is
+        g2.fillRect(gapX, gapY + 50, gapWidth, gapHeight - 50);
+        
+        // Draw non-bush walls first (background)
         for (AbstractWall wall : walls) {
-            if (!(wall instanceof Bush)) {
-                wall.draw(g2);
+            if (!wall.isDestroyed() && !(wall instanceof Bush)) {
+            wall.draw(g2);
             }
         }
         
@@ -535,21 +720,29 @@ public class GamePanel extends JPanel implements Runnable {
         
         // Draw enemy tanks
         for (BasicTank tank : basicTanks) {
-            tank.draw(g2);
+            if (!tank.isExploding()) {
+                tank.draw(g2);
+            }
         }
         for (FastTank tank : fastTanks) {
-            tank.draw(g2);
+            if (!tank.isExploding()) {
+                tank.draw(g2);
+            }
         }
         for (PowerTank tank : powerTanks) {
-            tank.draw(g2);
+            if (!tank.isExploding()) {
+                tank.draw(g2);
+            }
         }
         for (ArmorTank tank : armorTanks) {
-            tank.draw(g2);
+            if (!tank.isExploding()) {
+                tank.draw(g2);
+            }
         }
         
-        // Draw bushes after player and tanks so they appear on top
+        // Draw bushes (on top of everything else)
         for (AbstractWall wall : walls) {
-            if (wall instanceof Bush) {
+            if (!wall.isDestroyed() && wall instanceof Bush) {
                 wall.draw(g2);
             }
         }
@@ -562,30 +755,17 @@ public class GamePanel extends JPanel implements Runnable {
             if (b.active) b.draw(g2);
         }
         
-        // Draw grey rectangle for the gap between game map and right border
-        g2.setColor(Color.GRAY);
-        int gapX = 13 * 48;
-        int gapY = 0;
-        int gapWidth = getWidth() - gapX;
-        int gapHeight = 13 * 48;
-        g2.fillRect(gapX, gapY, gapWidth, gapHeight);
-        
-        // Draw FPS at top right
+        // Draw UI elements
         g2.setColor(Color.WHITE);
         g2.setFont(new Font("Arial", Font.BOLD, 16));
-        String fpsText = "FPS: " + fps;
-        int textWidth = g2.getFontMetrics().stringWidth(fpsText);
-        g2.drawString(fpsText, getWidth() - textWidth - 10, 20);
         
-        // Draw game info
-        String livesText = "Lives: " + gameManager.getPlayerLives();
-        g2.drawString(livesText, 10, 20);
+        // Draw stage information
+        g2.drawString("Stage: " + currentStageNumber, 10, 20);
+        g2.drawString("Wave: " + waveCount + "/" + TOTAL_WAVES_PER_STAGE, 10, 40);
+        g2.drawString("Tanks Killed: " + totalTanksKilled + "/" + TOTAL_TANKS_PER_STAGE, 10, 60);
         
-        String stageText = "Stage: " + gameManager.getCurrentStage();
-        g2.drawString(stageText, 10, 40);
-        
-        String pointsText = "Points: " + player.getPointsgained();
-        g2.drawString(pointsText, 10, 60);
+        // Draw player points
+        g2.drawString("Points: " + player.getPointsgained(), 10, 80);
         
         // Draw flag and stage number at bottom right
         if (flagIcon != null) {
@@ -622,6 +802,30 @@ public class GamePanel extends JPanel implements Runnable {
             String gameOverText = "GAME OVER";
             int gameOverWidth = g2.getFontMetrics().stringWidth(gameOverText);
             g2.drawString(gameOverText, getWidth()/2 - gameOverWidth/2, getHeight()/2);
+            
+            // Draw total points under GAME OVER
+            g2.setColor(Color.WHITE);
+            g2.setFont(new Font("Arial", Font.BOLD, 24));
+            String pointsText = "Total Points: " + player.getPointsgained();
+            int pointsWidth = g2.getFontMetrics().stringWidth(pointsText);
+            g2.drawString(pointsText, getWidth()/2 - pointsWidth/2, getHeight()/2 + 50);
+        }
+        
+        // Draw pause screen
+        if (isPaused) {
+            g2.setColor(new Color(0, 0, 0, 150)); // Semi-transparent black overlay
+            g2.fillRect(0, 0, getWidth(), getHeight());
+            
+            g2.setColor(Color.YELLOW);
+            g2.setFont(new Font("Arial", Font.BOLD, 48));
+            String pauseText = "PAUSED";
+            int pauseWidth = g2.getFontMetrics().stringWidth(pauseText);
+            g2.drawString(pauseText, getWidth()/2 - pauseWidth/2, getHeight()/2 - 30);
+            
+            g2.setFont(new Font("Arial", Font.BOLD, 24));
+            String continueText = "Click RESUME to Continue";
+            int continueWidth = g2.getFontMetrics().stringWidth(continueText);
+            g2.drawString(continueText, getWidth()/2 - continueWidth/2, getHeight()/2 + 30);
         }
         
         g2.dispose();

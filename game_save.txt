@@ -1,0 +1,15 @@
+Stage:1
+Wave:1
+TanksKilled:0
+PlayerPoints:0
+PlayerLives:2
+PlayerX:192
+PlayerY:328
+BasicTanks:1
+BasicTank:384,0
+FastTanks:1
+FastTank:240,4
+PowerTanks:1
+PowerTank:576,63
+ArmorTanks:1
+ArmorTank:62,0
